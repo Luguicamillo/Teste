@@ -32,31 +32,60 @@ void obter_data_hora_atual(char *data_hora) {
 void ler_arquivo() {
     FILE *arquivo = fopen("dados.txt", "r");
     if (arquivo == NULL) {
-        gravar_dados(); // Cria arquivo se não existir
+        // Se o arquivo não existe, cria um novo com valores iniciais
+        FILE *novo_arquivo = fopen("dados.txt", "w");
+        if (novo_arquivo == NULL) {
+            printf("Erro ao criar arquivo de dados!\n");
+            return;
+        }
+        
+        fprintf(novo_arquivo, "Saldo em Real: %.2f\n", saldo_real);
+        fprintf(novo_arquivo, "Saldo em Bitcoin: %.6f\n", saldo_bitcoin);
+        fprintf(novo_arquivo, "Saldo em Ethereum: %.4f\n", saldo_ethe);
+        fprintf(novo_arquivo, "Saldo em Ripple: %.2f\n", saldo_ripple);
+        fprintf(novo_arquivo, "Cotação Bitcoin: R$%.2f\n", cotacao_bit);
+        fprintf(novo_arquivo, "Cotação Ethereum: R$%.2f\n", cotacao_ethe);
+        fprintf(novo_arquivo, "Cotação Ripple: R$%.2f\n", cotacao_ripple);
+        fprintf(novo_arquivo, "\nExtrato de Transações:\n");
+        fclose(novo_arquivo);
         return;
     }
 
     char linha[MAX_LINHA];
-    int linha_atual = 0;
     bool lendo_extrato = false;
 
     while (fgets(linha, MAX_LINHA, arquivo) != NULL) {
+        // Remove a quebra de linha do final
+        linha[strcspn(linha, "\n")] = 0;
+        
         if (!lendo_extrato) {
-            if (linha_atual == 0) sscanf(linha, "Saldo em Real: %f", &saldo_real);
-            else if (linha_atual == 1) sscanf(linha, "Saldo em Bitcoin: %f", &saldo_bitcoin);
-            else if (linha_atual == 2) sscanf(linha, "Saldo em Ethereum: %f", &saldo_ethe);
-            else if (linha_atual == 3) sscanf(linha, "Saldo em Ripple: %f", &saldo_ripple);
-            else if (linha_atual == 4) sscanf(linha, "Cotação Bitcoin: R$%f", &cotacao_bit);
-            else if (linha_atual == 5) sscanf(linha, "Cotação Ethereum: R$%f", &cotacao_ethe);
-            else if (linha_atual == 6) sscanf(linha, "Cotação Ripple: R$%f", &cotacao_ripple);
-            else if (strstr(linha, "Extrato de Transações:") != NULL) lendo_extrato = true;
-            linha_atual++;
+            if (strstr(linha, "Saldo em Real:") != NULL) {
+                sscanf(linha, "Saldo em Real: %f", &saldo_real);
+            } else if (strstr(linha, "Saldo em Bitcoin:") != NULL) {
+                sscanf(linha, "Saldo em Bitcoin: %f", &saldo_bitcoin);
+            } else if (strstr(linha, "Saldo em Ethereum:") != NULL) {
+                sscanf(linha, "Saldo em Ethereum: %f", &saldo_ethe);
+            } else if (strstr(linha, "Saldo em Ripple:") != NULL) {
+                sscanf(linha, "Saldo em Ripple: %f", &saldo_ripple);
+            } else if (strstr(linha, "Cotação Bitcoin:") != NULL) {
+                sscanf(linha, "Cotação Bitcoin: R$%f", &cotacao_bit);
+            } else if (strstr(linha, "Cotação Ethereum:") != NULL) {
+                sscanf(linha, "Cotação Ethereum: R$%f", &cotacao_ethe);
+            } else if (strstr(linha, "Cotação Ripple:") != NULL) {
+                sscanf(linha, "Cotação Ripple: R$%f", &cotacao_ripple);
+            } else if (strstr(linha, "Extrato de Transações:") != NULL) {
+                lendo_extrato = true;
+            }
         } else {
-            if (num_transacoes < MAX_EXTRATO) {
+            if (num_transacoes < MAX_EXTRATO && strlen(linha) > 0) {
                 Transacao t;
-                if (sscanf(linha, "%19[0-9-:] %1[+-] %f %3s CT: %f TX: %f REAL: %f BTC: %f ETH: %f XRP: %f",
-                          t.data_hora, t.sinal, &t.valor, t.moeda, &t.cotacao, &t.taxa,
-                          &t.saldo_real, &t.saldo_bitcoin, &t.saldo_ethe, &t.saldo_ripple) >= 7) {
+                // Formato ajustado para corresponder exatamente ao formato de gravação
+                if (sscanf(linha, "%10s %5s %1s %f %3s CT: %f TX: %f REAL: %f BTC: %f ETH: %f XRP: %f",
+                          t.data_hora, t.data_hora+11, t.sinal, &t.valor, t.moeda, 
+                          &t.cotacao, &t.taxa, &t.saldo_real, &t.saldo_bitcoin, 
+                          &t.saldo_ethe, &t.saldo_ripple) >= 7) {
+                    // Recompõe a data/hora completa
+                    sprintf(t.data_hora, "%s %s", t.data_hora, t.data_hora+11);
                     extrato[num_transacoes++] = t;
                 }
             }
@@ -117,6 +146,26 @@ void consultar_extrato() {
     if (senha_usuario != senha) {
         printf("Senha inválida!\n");
         return;
+    }
+
+    char data_hora[20];
+    obter_data_hora_atual(data_hora);
+    
+    if (num_transacoes < MAX_EXTRATO) {
+        Transacao t;
+        strcpy(t.data_hora, data_hora);
+        strcpy(t.sinal, "C");
+        strcpy(t.moeda, "EXT");
+        t.valor = 0.0;
+        t.cotacao = 0.0;
+        t.taxa = 0.0;
+        t.saldo_real = saldo_real;
+        t.saldo_bitcoin = saldo_bitcoin;
+        t.saldo_ethe = saldo_ethe;
+        t.saldo_ripple = saldo_ripple;
+        
+        extrato[num_transacoes++] = t;
+        gravar_dados(); 
     }
 
     printf("\n=== Extrato de Transações ===\n");
