@@ -6,7 +6,8 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-char nome[50] = "Luis, Lucas e Leo";
+// Variáveis globais
+char nome[50] = "Luis";
 char cpf[15] = "12345678910";
 int senha = 999999;
 float saldo_real = 0;
@@ -19,10 +20,19 @@ float cotacao_ripple = 2.99;
 Transacao extrato[MAX_EXTRATO];
 int num_transacoes = 0;
 
+void obter_data_hora_atual(char *data_hora) {
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    snprintf(data_hora, 20, "%02d-%02d-%04d %02d:%02d", 
+             tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, 
+             tm.tm_hour, tm.tm_min);
+}
+
+// Implementação das funções
 void ler_arquivo() {
     FILE *arquivo = fopen("dados.txt", "r");
     if (arquivo == NULL) {
-        gravar_dados(); 
+        gravar_dados(); // Cria arquivo se não existir
         return;
     }
 
@@ -131,8 +141,7 @@ void depositar() {
     char data_hora[20];
     float valor;
     
-    printf("Digite a data e hora (dd-mm-aaaa hh:mm): ");
-    scanf(" %[^\n]", data_hora);
+    obter_data_hora_atual(data_hora);
     printf("Valor do depósito: R$");
     scanf("%f", &valor);
     
@@ -167,8 +176,7 @@ void sacar() {
     char data_hora[20];
     float valor;
     
-    printf("Digite a data e hora (dd-mm-aaaa hh:mm): ");
-    scanf(" %[^\n]", data_hora);
+    obter_data_hora_atual(data_hora);
     printf("Valor do saque: R$");
     scanf("%f", &valor);
     
@@ -222,8 +230,7 @@ void comprar_cripto() {
     printf("2. Ethereum (ETH): R$%.2f\n", cotacao_ethe);
     printf("3. Ripple (XRP): R$%.2f\n", cotacao_ripple);
     
-    printf("\nDigite a data e hora (dd-mm-aaaa hh:mm): ");
-    scanf(" %[^\n]", data_hora);
+    obter_data_hora_atual(data_hora);
     printf("Escolha a criptomoeda (BTC/ETH/XRP): ");
     scanf("%s", moeda);
     printf("Valor em reais para compra: R$");
@@ -239,12 +246,13 @@ void comprar_cripto() {
         return;
     }
 
+    // Converte para uppercase
     for (int i = 0; moeda[i]; i++) {
         moeda[i] = toupper(moeda[i]);
     }
 
     if (strcmp(moeda, "BTC") == 0) {
-        float taxa = 0.02; 
+        float taxa = 0.02; // 2%
         float quantidade = (valor_reais / cotacao_bit) * (1 - taxa);
         
         saldo_real -= valor_reais;
@@ -269,7 +277,7 @@ void comprar_cripto() {
         printf("Compra realizada! Você adquiriu %.6f BTC\n", quantidade);
     }
     else if (strcmp(moeda, "ETH") == 0) {
-        float taxa = 0.01; 
+        float taxa = 0.01; // 1%
         float quantidade = (valor_reais / cotacao_ethe) * (1 - taxa);
         
         saldo_real -= valor_reais;
@@ -294,7 +302,7 @@ void comprar_cripto() {
         printf("Compra realizada! Você adquiriu %.4f ETH\n", quantidade);
     }
     else if (strcmp(moeda, "XRP") == 0) {
-        float taxa = 0.01; 
+        float taxa = 0.01; // 1%
         float quantidade = (valor_reais / cotacao_ripple) * (1 - taxa);
         
         saldo_real -= valor_reais;
@@ -344,8 +352,7 @@ void vender_cripto() {
     printf("2. Ethereum (ETH): R$%.2f\n", cotacao_ethe);
     printf("3. Ripple (XRP): R$%.2f\n", cotacao_ripple);
     
-    printf("\nDigite a data e hora (dd-mm-aaaa hh:mm): ");
-    scanf(" %[^\n]", data_hora);
+    obter_data_hora_atual(data_hora);
     printf("Escolha a criptomoeda (BTC/ETH/XRP): ");
     scanf("%s", moeda);
     printf("Quantidade para vender: ");
@@ -356,6 +363,7 @@ void vender_cripto() {
         return;
     }
 
+    // Converte para uppercase
     for (int i = 0; moeda[i]; i++) {
         moeda[i] = toupper(moeda[i]);
     }
@@ -366,7 +374,7 @@ void vender_cripto() {
             return;
         }
         
-        float taxa = 0.03;
+        float taxa = 0.03; // 3%
         float valor_recebido = quantidade * cotacao_bit * (1 - taxa);
         
         saldo_bitcoin -= quantidade;
@@ -396,7 +404,7 @@ void vender_cripto() {
             return;
         }
         
-        float taxa = 0.02;
+        float taxa = 0.02; // 2%
         float valor_recebido = quantidade * cotacao_ethe * (1 - taxa);
         
         saldo_ethe -= quantidade;
@@ -426,7 +434,7 @@ void vender_cripto() {
             return;
         }
         
-        float taxa = 0.01;
+        float taxa = 0.01; // 1%
         float valor_recebido = quantidade * cotacao_ripple * (1 - taxa);
         
         saldo_ripple -= quantidade;
@@ -459,14 +467,17 @@ void vender_cripto() {
 }
 
 void atualizar_cot() {
-    int variacao_max = 5;
+    int variacao_max = 5; // Variação máxima de 5%
     
+    // Atualiza Bitcoin
     int variacao = rand() % (2 * variacao_max + 1) - variacao_max;
     cotacao_bit *= 1 + variacao / 100.0;
     
+    // Atualiza Ethereum
     variacao = rand() % (2 * variacao_max + 1) - variacao_max;
     cotacao_ethe *= 1 + variacao / 100.0;
     
+    // Atualiza Ripple
     variacao = rand() % (2 * variacao_max + 1) - variacao_max;
     cotacao_ripple *= 1 + variacao / 100.0;
     

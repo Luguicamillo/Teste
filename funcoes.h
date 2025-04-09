@@ -36,6 +36,7 @@ extern float cotacao_ripple;
 extern Transacao extrato[MAX_EXTRATO];
 extern int num_transacoes;
 
+void obter_data_hora_atual(char *data_hora);
 void ler_arquivo();
 void gravar_dados();
 void consultar_saldo();
