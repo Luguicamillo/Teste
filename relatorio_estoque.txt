@@ -1,0 +1,7 @@
+=== RELATORIO DE ESTOQUE ===
+
+Cod    Nome                 Descricao                      Qtd        Preco Uni  Total       
+1508563312 parafuso             m8                             20         5.00       100.00      
+2      parafuso             m6                             13         4.00       52.00       
+
+VALOR TOTAL DO ESTOQUE: 152.00
